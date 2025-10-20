@@ -143,5 +143,72 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  if (calculateBtn) calculateBtn.addEventListener('click', performCalculations);
+  if (calculateBtn) {
+    calculateBtn.addEventListener('click', () => {
+      performCalculations();
+      drawAllChartsBar(getNumericValue('arrivalRate'), getNumericValue('serviceRate'));
+    });
+  }
 });
+
+function drawAllChartsBar(lambda, mu) {
+  // Simula valores de lambda desde 0 hasta mu - 0.01
+  const labels = [];
+  const dataUtilization = [];
+  const dataCustomersSystem = [];
+  const dataCustomersQueue = [];
+  const dataTimeSystem = [];
+  const dataTimeQueue = [];
+  const dataEmptySystemProb = [];
+  for (let l = 0; l < mu; l += mu/10) { // Menos barras para mayor claridad
+    const rho = l/mu;
+    labels.push(l.toFixed(2));
+    dataUtilization.push(rho);
+    dataCustomersSystem.push(rho < 1 ? rho/(1 - rho) : null);
+    dataCustomersQueue.push(rho < 1 ? (rho*rho)/(1 - rho) : null);
+    dataTimeSystem.push(l < mu ? 1/(mu - l) : null);
+    dataTimeQueue.push(l < mu ? rho/(mu - l) : null);
+    dataEmptySystemProb.push(1 - rho >= 0 ? 1 - rho : null);
+  }
+
+  // Utilización
+  addBarChart('utilizationChart', labels, dataUtilization, 'Utilización del sistema (ρ)', 'ρ');
+  // Clientes en sistema
+  addBarChart('customersSystemChart', labels, dataCustomersSystem, 'N° promedio de clientes en el sistema (L)', 'L');
+  // Clientes en cola
+  addBarChart('customersQueueChart', labels, dataCustomersQueue, 'N° promedio de clientes en la cola (Lq)', 'Lq');
+  // Tiempo en sistema
+  addBarChart('timeSystemChart', labels, dataTimeSystem, 'Tiempo promedio en el sistema (W)', 'W [horas]');
+  // Tiempo en cola
+  addBarChart('timeQueueChart', labels, dataTimeQueue, 'Tiempo promedio en la cola (Wq)', 'Wq [horas]');
+  // Probabilidad sistema vacío
+  addBarChart('emptySystemProbChart', labels, dataEmptySystemProb, 'Probabilidad que el sistema esté vacío (P0)', 'P0');
+}
+
+// Función auxiliar para agregar un gráfico de barras
+function addBarChart(canvasId, labels, data, title, yLabel) {
+  const ctx = document.getElementById(canvasId).getContext('2d');
+  if(window[canvasId + 'Instance']) window[canvasId + 'Instance'].destroy();
+  window[canvasId + 'Instance'] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: yLabel,
+        data: data,
+        backgroundColor: 'rgba(75,192,192,0.5)',
+        borderColor: 'rgba(75,192,192,1)',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      plugins: {
+        title: { display: true, text: title }
+      },
+      scales: {
+        x: { title: { display: true, text: 'Tasa de llegada (λ)' } },
+        y: { title: { display: true, text: yLabel } }
+      }
+    }
+  });
+}
