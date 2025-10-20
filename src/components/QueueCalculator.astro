@@ -1,0 +1,113 @@
+<div class="queue-calculator">
+  <div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+      <h3 class="h5 mb-0">Parámetros de entrada</h3>
+    </div>
+    <div class="card-body">
+      <form id="queueForm">
+        <div class="row">
+          <div class="col-md-4 mb-3">
+            <div class="form-group">
+              <label for="arrivalRate" class="form-label">Tasa de llegada (λ):</label>
+              <div class="input-group">
+                <input type="number" class="form-control" id="arrivalRate" min="0" step="0.01" required>
+                <span class="input-group-text">clientes/hora</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-4 mb-3">
+            <div class="form-group">
+              <label for="serviceRate" class="form-label">Tasa de servicio (μ):</label>
+              <div class="input-group">
+                <input type="number" class="form-control" id="serviceRate" min="0" step="0.01" required>
+                <span class="input-group-text">clientes/hora</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-4 mb-3">
+            <div class="form-group">
+              <label for="simulationTime" class="form-label">Tiempo de simulación:</label>
+              <div class="input-group">
+                <input type="number" class="form-control" id="simulationTime" min="0" required>
+                <span class="input-group-text">horas</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row mt-3">
+          <div class="col-12">
+            <button type="button" id="calculateBtn" class="btn btn-primary me-2">Calcular</button>
+            <button type="button" id="simulateBtn" class="btn btn-secondary">Simular</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Sección de Resultados -->
+  <div class="card mb-4">
+    <div class="card-header bg-success text-white">
+      <h3 class="h5 mb-0">Resultados teóricos</h3>
+    </div>
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-6">
+          <ul class="list-group">
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              <span>Utilización del sistema (ρ):</span>
+              <span class="badge bg-primary" id="systemUtilization">-</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              <span>Número promedio de clientes en el sistema (L):</span>
+              <span class="badge bg-primary" id="avgCustomersSystem">-</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              <span>Número promedio de clientes en la cola (Lq):</span>
+              <span class="badge bg-primary" id="avgCustomersQueue">-</span>
+            </li>
+          </ul>
+        </div>
+        <div class="col-md-6">
+          <ul class="list-group">
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              <span>Tiempo promedio en el sistema (W):</span>
+              <span class="badge bg-primary" id="avgTimeSystem">-</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              <span>Tiempo promedio en la cola (Wq):</span>
+              <span class="badge bg-primary" id="avgTimeQueue">-</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              <span>Probabilidad que el sistema esté vacío (P0):</span>
+              <span class="badge bg-primary" id="emptySystemProb">-</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sección del Simulador -->
+  <div class="card">
+    <div class="card-header bg-info text-white">
+      <h3 class="h5 mb-0">Simulador</h3>
+    </div>
+    <div class="card-body">
+      <canvas id="simulationCanvas" class="w-100" height="100"></canvas>
+    </div>
+  </div>
+</div>
+
+<style>
+  .badge {
+    font-size: 1rem;
+    font-weight: normal;
+  }
+</style>
+
+<script>
+  import '../scripts/queueCalculations.js'
+</script>

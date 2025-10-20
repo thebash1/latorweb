@@ -1,0 +1,40 @@
+.queue-calculator .form-label {
+  font-weight: 500;
+}
+
+.queue-calculator .input-group-text {
+  background-color: #f8f9fa;
+}
+
+.queue-calculator .list-group-item {
+  padding: 0.75rem 1.25rem;
+}
+
+.queue-calculator .badge {
+  min-width: 60px;
+  text-align: right;
+}
+
+/* Ajustes responsive */
+@media (max-width: 768px) {
+  .queue-calculator .badge {
+    font-size: 0.875rem;
+  }
+  
+  .queue-calculator .list-group-item {
+    flex-direction: column;
+    align-items: flex-start !important;
+  }
+  
+  .queue-calculator .badge {
+    margin-top: 0.5rem;
+    align-self: flex-end;
+  }
+}
+
+@media (max-width: 576px) {
+  .queue-calculator .btn {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+}
