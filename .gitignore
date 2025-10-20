@@ -7,4 +7,5 @@ package-lock.json
 package.json
 pnpm-lock.yaml
 tsconfig.json
+astro.config.mjs
 
