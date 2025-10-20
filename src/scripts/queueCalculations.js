@@ -88,7 +88,7 @@ function updateResult(id, value) {
   if (typeof value === 'string') {
     el.textContent = value;
   } else {
-    el.textContent = (Number.isFinite(value) ? value.toFixed(4) : '-');
+    el.textContent = value;
   }
 }
 
@@ -131,203 +131,9 @@ function performCalculations() {
   }
 }
 
-/* ---------- SIMULACIÓN POR SEGUNDO (con START/STOP y protección) ---------- */
-const simState = {
-  intervalId: null,
-  running: false,
-  elapsedSeconds: 0,
-  queueLength: 0,
-  arrivals: 0,
-  departures: 0,
-  maxDisplay: 60, // máximo de clientes dibujados
-  stepMs: 1000
-};
-
-// Sampling helper: Poisson with λ small -> Bernoulli approx; but keep ability for >1 arrivals by loop
-function samplePoisson(lambda) {
-  // For tiny lambda (<<1) this will return 0 or 1 most times.
-  // Using Knuth algorithm
-  if (lambda <= 0) return 0;
-  const L = Math.exp(-lambda);
-  let k = 0;
-  let p = 1;
-  do {
-    k++;
-    p *= Math.random();
-  } while (p > L);
-  return k - 1;
-}
-
-function drawSimulationFrame() {
-  const canvas = document.getElementById('simulationCanvas');
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  const w = Math.max(300, canvas.parentElement.offsetWidth);
-  const h = 200;
-  canvas.width = w;
-  canvas.height = h;
-
-  // fondo
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(0, 0, w, h);
-
-  // dibujar servidor (lado izquierdo)
-  const padding = 12;
-  const serverBox = { x: padding, y: padding + 10, w: 60, h: h - 2 * padding - 20 };
-  ctx.fillStyle = '#e9f7ef';
-  ctx.fillRect(serverBox.x, serverBox.y, serverBox.w, serverBox.h);
-  ctx.strokeStyle = '#28a745';
-  ctx.strokeRect(serverBox.x, serverBox.y, serverBox.w, serverBox.h);
-  ctx.fillStyle = '#000';
-  ctx.font = '12px Arial';
-  ctx.fillText('Servidor', serverBox.x + 8, serverBox.y + 14);
-
-  // dibujar cola (a la derecha)
-  const queueX = serverBox.x + serverBox.w + 20;
-  const queueY = serverBox.y;
-  const slotW = 18;
-  const slotH = 30;
-  const gap = 6;
-
-  // cuantos dibujar
-  const drawCount = Math.min(simState.queueLength, simState.maxDisplay);
-  for (let i = 0; i < drawCount; i++) {
-    const col = i % 10;
-    const row = Math.floor(i / 10);
-    const x = queueX + (slotW + gap) * col;
-    const y = queueY + (slotH + gap) * row;
-    ctx.fillStyle = i === 0 ? '#ffd700' : '#0d6efd';
-    ctx.fillRect(x, y, slotW, slotH);
-    ctx.strokeStyle = '#00000022';
-    ctx.strokeRect(x, y, slotW, slotH);
-  }
-
-  // si hay más clientes que los dibujados, mostrar "+N"
-  if (simState.queueLength > simState.maxDisplay) {
-    ctx.fillStyle = '#dc3545';
-    ctx.font = '14px Arial';
-    ctx.fillText('+' + (simState.queueLength - simState.maxDisplay) + ' más', queueX, queueY + (Math.ceil(simState.maxDisplay / 10) * (slotH + gap)) + 18);
-  }
-
-  // cuadro de estadísticas
-  const statsX = queueX;
-  const statsY = queueY + h - padding - 50;
-  ctx.fillStyle = '#f8f9fa';
-  ctx.fillRect(statsX, statsY, 260, 46);
-  ctx.strokeStyle = '#ddd';
-  ctx.strokeRect(statsX, statsY, 260, 46);
-  ctx.fillStyle = '#333';
-  ctx.font = '12px Arial';
-  ctx.fillText(`t = ${simState.elapsedSeconds}s`, statsX + 8, statsY + 16);
-  ctx.fillText(`Cola = ${simState.queueLength}`, statsX + 8, statsY + 32);
-  ctx.fillText(`A=${simState.arrivals} D=${simState.departures}`, statsX + 120, statsY + 16);
-}
-
-function updateSimUI() {
-  const statusEl = document.getElementById('simStatus');
-  const elapsedEl = document.getElementById('simElapsed');
-  const queueEl = document.getElementById('simQueue');
-  if (statusEl) statusEl.textContent = simState.running ? 'En ejecución' : 'Detenido';
-  if (elapsedEl) elapsedEl.textContent = `${simState.elapsedSeconds}s`;
-  if (queueEl) queueEl.textContent = `${simState.queueLength}`;
-  drawSimulationFrame();
-}
-
-function startSimulation() {
-  if (simState.running) return; // ya corriendo
-
-  const arrivalRate = getNumericValue('arrivalRate');
-  const serviceRate = getNumericValue('serviceRate');
-  const simulationTimeHours = getNumericValue('simulationTime');
-
-  if (isNaN(arrivalRate) || isNaN(serviceRate) || isNaN(simulationTimeHours)) {
-    showAlert('Por favor, completa todos los campos con valores numéricos válidos (puedes usar coma o punto).', 'warning');
-    return;
-  }
-
-  // Convertir a por segundo (tasas por hora -> por segundo)
-  const lambdaPerSec = arrivalRate / 3600;
-  const muPerSec = serviceRate / 3600;
-
-  // reiniciar estado
-  simState.running = true;
-  simState.elapsedSeconds = 0;
-  simState.queueLength = 0;
-  simState.arrivals = 0;
-  simState.departures = 0;
-
-  // activar boton parar / desactivar simular
-  const simulateBtn = document.getElementById('simulateBtn');
-  const stopBtn = document.getElementById('stopSimulationBtn');
-  if (simulateBtn) simulateBtn.disabled = true;
-  if (stopBtn) stopBtn.disabled = false;
-
-  updateSimUI();
-
-  // duración máxima en segundos (si usuario puso 0 o negativo, ejecutamos indefinidamente hasta parar)
-  const maxSeconds = (simulationTimeHours > 0) ? Math.floor(simulationTimeHours * 3600) : Infinity;
-
-  // protecciones: no dejar que queueLength crezca sin control (limite de seguridad)
-  const safetyMaxQueue = 2000000; // tope absoluto: si se alcanza, paramos para proteger al equipo
-
-  simState.intervalId = setInterval(() => {
-    // arrivals: sample Poisson(lambdaPerSec)
-    const arr = samplePoisson(lambdaPerSec);
-    simState.queueLength += arr;
-    simState.arrivals += arr;
-
-    // service: si hay alguien en la cola, intentar servicio (una finalización por tick como aproximación)
-    if (simState.queueLength > 0) {
-      // para probabilidades pequeñas: usamos Bernoulli con prob = 1 - exp(-muPerSec)
-      const serviceProb = 1 - Math.exp(-muPerSec);
-      if (Math.random() < serviceProb) {
-        simState.queueLength = Math.max(0, simState.queueLength - 1);
-        simState.departures += 1;
-      }
-    }
-
-    simState.elapsedSeconds += 1;
-    updateSimUI();
-
-    // Parar condiciones
-    if (simState.elapsedSeconds >= maxSeconds) {
-      showAlert('Simulación finalizada: se alcanzó el tiempo de simulación.', 'info', 4000);
-      stopSimulation();
-      return;
-    }
-
-    if (simState.queueLength >= safetyMaxQueue) {
-      showAlert('Simulación detenida: cola excesiva (riesgo de saturación).', 'danger', 8000);
-      stopSimulation();
-      return;
-    }
-
-    // Si la cola crece mucho, seguimos permitiendo la simulación (usuario puede parar).
-  }, simState.stepMs);
-
-  showAlert('Simulación iniciada. Actualizaciones cada 1s. Usa "Parar" para detenerla.', 'info', 3500);
-}
-
-function stopSimulation() {
-  if (simState.intervalId) {
-    clearInterval(simState.intervalId);
-    simState.intervalId = null;
-  }
-  simState.running = false;
-
-  const simulateBtn = document.getElementById('simulateBtn');
-  const stopBtn = document.getElementById('stopSimulationBtn');
-  if (simulateBtn) simulateBtn.disabled = false;
-  if (stopBtn) stopBtn.disabled = true;
-
-  updateSimUI();
-}
-
 // Inicializar listeners cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', () => {
   const calculateBtn = document.getElementById('calculateBtn');
-  const simulateBtn = document.getElementById('simulateBtn');
-  const stopBtn = document.getElementById('stopSimulationBtn');
   const form = document.getElementById('queueForm');
 
   if (form) {
@@ -338,12 +144,4 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   if (calculateBtn) calculateBtn.addEventListener('click', performCalculations);
-  if (simulateBtn) simulateBtn.addEventListener('click', startSimulation);
-  if (stopBtn) stopBtn.addEventListener('click', stopSimulation);
-
-  // parar simulación si el usuario cierra/navega la página
-  window.addEventListener('beforeunload', stopSimulation);
-
-  // dibujar frame inicial
-  drawSimulationFrame();
 });
