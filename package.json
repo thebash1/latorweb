@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "astro": "^5.14.6",
-    "bootstrap": "^5.3.8"
+    "bootstrap": "^5.3.8",
+    "pnpm": "^10.18.3"
   }
 }

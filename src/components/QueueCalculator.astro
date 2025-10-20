@@ -1,46 +1,50 @@
+---
+---
 <div class="queue-calculator">
+  <!-- Sección de Parámetros de Entrada -->
   <div class="card mb-4">
     <div class="card-header bg-primary text-white">
       <h3 class="h5 mb-0">Parámetros de entrada</h3>
     </div>
     <div class="card-body">
-      <form id="queueForm">
+      <form id="queueForm" novalidate>
         <div class="row">
           <div class="col-md-4 mb-3">
-            <div class="form-group">
-              <label for="arrivalRate" class="form-label">Tasa de llegada (λ):</label>
-              <div class="input-group">
-                <input type="number" class="form-control" id="arrivalRate" min="0" step="0.01" required>
-                <span class="input-group-text">clientes/hora</span>
-              </div>
+            <label for="arrivalRate" class="form-label">Tasa de llegada (λ):</label>
+            <div class="input-group">
+              <input type="number" class="form-control" id="arrivalRate" min="0" step="any" inputmode="decimal" pattern="[0-9]+([\\.,][0-9]+)?"
+                     placeholder="Ej. 1.5" required>
+              <span class="input-group-text">clientes/hora</span>
             </div>
+            <div class="invalid-feedback">Ingresa una tasa de llegada válida (puedes usar 1.5 o 1,5).</div>
           </div>
 
           <div class="col-md-4 mb-3">
-            <div class="form-group">
-              <label for="serviceRate" class="form-label">Tasa de servicio (μ):</label>
-              <div class="input-group">
-                <input type="number" class="form-control" id="serviceRate" min="0" step="0.01" required>
-                <span class="input-group-text">clientes/hora</span>
-              </div>
+            <label for="serviceRate" class="form-label">Tasa de servicio (μ):</label>
+            <div class="input-group">
+              <input type="number" class="form-control" id="serviceRate" min="0" step="any" inputmode="decimal" pattern="[0-9]+([\\.,][0-9]+)?"
+                     placeholder="Ej. 2.0" required>
+              <span class="input-group-text">clientes/hora</span>
             </div>
+            <div class="invalid-feedback">Ingresa una tasa de servicio válida (puedes usar 2.0 o 2,0).</div>
           </div>
 
           <div class="col-md-4 mb-3">
-            <div class="form-group">
-              <label for="simulationTime" class="form-label">Tiempo de simulación:</label>
-              <div class="input-group">
-                <input type="number" class="form-control" id="simulationTime" min="0" required>
-                <span class="input-group-text">horas</span>
-              </div>
+            <label for="simulationTime" class="form-label">Tiempo de simulación:</label>
+            <div class="input-group">
+              <input type="number" class="form-control" id="simulationTime" min="0" step="any" inputmode="decimal" pattern="[0-9]+([\\.,][0-9]+)?"
+                     placeholder="Ej. 0.5" required>
+              <span class="input-group-text">horas</span>
             </div>
+            <div class="invalid-feedback">Ingresa un tiempo de simulación válido (puedes usar 0.5 o 0,5).</div>
           </div>
         </div>
 
         <div class="row mt-3">
-          <div class="col-12">
-            <button type="button" id="calculateBtn" class="btn btn-primary me-2">Calcular</button>
+          <div class="col-12 d-flex flex-wrap gap-2">
+            <button type="button" id="calculateBtn" class="btn btn-primary">Calcular</button>
             <button type="button" id="simulateBtn" class="btn btn-secondary">Simular</button>
+            <button type="button" id="stopSimulationBtn" class="btn btn-danger" disabled>Parar</button>
           </div>
         </div>
       </form>
@@ -50,7 +54,7 @@
   <!-- Sección de Resultados -->
   <div class="card mb-4">
     <div class="card-header bg-success text-white">
-      <h3 class="h5 mb-0">Resultados teóricos</h3>
+      <h3 class="h5 mb-0">Resultados del analisis</h3>
     </div>
     <div class="card-body">
       <div class="row">
@@ -73,11 +77,11 @@
         <div class="col-md-6">
           <ul class="list-group">
             <li class="list-group-item d-flex justify-content-between align-items-center">
-              <span>Tiempo promedio en el sistema (W):</span>
+              <span>Tiempo promedio de cliente en el sistema (W):</span>
               <span class="badge bg-primary" id="avgTimeSystem">-</span>
             </li>
             <li class="list-group-item d-flex justify-content-between align-items-center">
-              <span>Tiempo promedio en la cola (Wq):</span>
+              <span>Tiempo promedio de cliente en la cola (Wq):</span>
               <span class="badge bg-primary" id="avgTimeQueue">-</span>
             </li>
             <li class="list-group-item d-flex justify-content-between align-items-center">
@@ -90,24 +94,23 @@
     </div>
   </div>
 
-  <!-- Sección del Simulador -->
-  <div class="card">
-    <div class="card-header bg-info text-white">
-      <h3 class="h5 mb-0">Simulador</h3>
-    </div>
-    <div class="card-body">
-      <canvas id="simulationCanvas" class="w-100" height="100"></canvas>
-    </div>
-  </div>
-</div>
 
 <style>
   .badge {
     font-size: 1rem;
-    font-weight: normal;
+    font-weight: 500;
+    min-width: 70px;
+    text-align: right;
   }
-</style>
-
+  
+  @media (max-width: 576px) {
+    .badge {
+      min-width: 50px;
+      font-size: 0.9rem;
+    }
+  }
+  </style>
+  
 <script>
-  import '../scripts/queueCalculations.js'
+  import '../scripts/queueCalculations.js';
 </script>
