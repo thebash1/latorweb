@@ -1,11 +1,4 @@
 # modules
 node_modules/
-.astro/
 
 # packages
-package-lock.json
-package.json
-pnpm-lock.yaml
-tsconfig.json
-astro.config.mjs
-
